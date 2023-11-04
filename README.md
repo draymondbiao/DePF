@@ -44,6 +44,14 @@ python test.py
 
 # Contact Informaiton
 
+@article{li2023depf,
+  title={DePF: A Novel Fusion Approach based on Decomposition Pooling for Infrared and Visible Images},
+  author={Li, Hui and Xiao, Yongbiao and Cheng, Chunyang and Shen, Zhongwei and Song, Xiaoning},
+  journal={IEEE Transactions on Instrumentation and Measurement},
+  year={2023},
+  publisher={IEEE}
+}
+
 If you have any questions, please contact me at <yongbiao_xiao_jnu@163.com>.
 
 # Citation
