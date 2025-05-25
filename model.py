@@ -24,8 +24,8 @@ import torch
 import torch.nn as nn
 import numpy as np
 from torch.utils.data import DataLoader
-def get_wav(in_channels, pool=True):
-    """wavelet decomposition using conv2d"""
+def get_de(in_channels, pool=True):
+    """decomposition using conv2d"""
 
     if pool:
         net = nn.Conv2d
@@ -88,21 +88,21 @@ def get_wav(in_channels, pool=True):
     return LL, LH, HL, HH
 
 
-class WavePool(nn.Module):
+class DePool(nn.Module):
     def __init__(self, in_channels):
-        super(WavePool, self).__init__()
-        self.LL, self.LH, self.HL, self.HH = get_wav(in_channels)
+        super(DePool, self).__init__()
+        self.LL, self.LH, self.HL, self.HH = get_de(in_channels)
 
     def forward(self, x):
         return self.LL(x), self.LH(x), self.HL(x), self.HH(x)
 
 
-class WaveUnpool(nn.Module):
+class DeUnpool(nn.Module):
     def __init__(self, in_channels, option_unpool='sum'):
-        super(WaveUnpool, self).__init__()
+        super(DeUnpool, self).__init__()
         self.in_channels = in_channels
         self.option_unpool = option_unpool
-        self.LL, self.LH, self.HL, self.HH = get_wav(self.in_channels, pool=False)
+        self.LL, self.LH, self.HL, self.HH = get_de(self.in_channels, pool=False)
 
     def forward(self, LL, LH, HL, HH, original=None):
         if self.option_unpool == 'sum':
@@ -140,9 +140,9 @@ class WaveUnpool(nn.Module):
 
 
 
-class WaveEncoder(nn.Module):
+class DeEncoder(nn.Module):
     def __init__(self, option_unpool):
-        super(WaveEncoder, self).__init__()
+        super(DeEncoder, self).__init__()
         self.option_unpool = option_unpool
 
         self.pad = nn.ReflectionPad2d(1)
@@ -151,17 +151,17 @@ class WaveEncoder(nn.Module):
         self.conv0 = nn.Conv2d(1, 1, 1, 1, 0)
         self.conv1_1 = nn.Conv2d(1, 64, 3, 1, 0)
         self.conv1_2 = nn.Conv2d(64, 64, 3, 1, 0)
-        self.pool1 = WavePool(64)
+        self.pool1 = DePool(64)
 
         self.conv2_1 = nn.Conv2d(64, 128, 3, 1, 0)
         self.conv2_2 = nn.Conv2d(128, 128, 3, 1, 0)
-        self.pool2 = WavePool(128)
+        self.pool2 = DePool(128)
 
         self.conv3_1 = nn.Conv2d(128, 256, 3, 1, 0)
         self.conv3_2 = nn.Conv2d(256, 256, 3, 1, 0)
         self.conv3_3 = nn.Conv2d(256, 256, 3, 1, 0)
         self.conv3_4 = nn.Conv2d(256, 256, 3, 1, 0)
-        self.pool3 = WavePool(256)
+        self.pool3 = DePool(256)
 
         self.conv4_1 = nn.Conv2d(256, 512, 3, 1, 0)
 
@@ -237,9 +237,9 @@ class WaveEncoder(nn.Module):
             raise NotImplementedError
 
 
-class WaveDecoder(nn.Module):
+class DeDecoder(nn.Module):
     def __init__(self, option_unpool):
-        super(WaveDecoder, self).__init__()
+        super(DeDecoder, self).__init__()
         self.option_unpool = option_unpool
 
         if option_unpool == 'sum':
@@ -254,7 +254,7 @@ class WaveDecoder(nn.Module):
         self.conv4_1 = nn.Conv2d(512, 256, 3, 1, 0)
         self.sigmoid=nn.Sigmoid()
 
-        self.recon_block3 = WaveUnpool(256, option_unpool)
+        self.recon_block3 = DeUnpool(256, option_unpool)
         if option_unpool == 'sum':
             self.conv3_4 = nn.Conv2d(256*multiply_in, 256, 3, 1, 0)
         else:
@@ -262,14 +262,14 @@ class WaveDecoder(nn.Module):
         self.conv3_3 = nn.Conv2d(256, 256, 3, 1, 0)
         self.conv3_2 = nn.Conv2d(256, 256, 3, 1, 0)
         self.conv3_1 = nn.Conv2d(256, 128, 3, 1, 0)
-        self.recon_block2 = WaveUnpool(128, option_unpool)
+        self.recon_block2 = DeUnpool(128, option_unpool)
         if option_unpool == 'sum':
             self.conv2_2 = nn.Conv2d(128*multiply_in, 128, 3, 1, 0)
         else:
             self.conv2_2_2 = nn.Conv2d(128*multiply_in, 128, 3, 1, 0)
         self.conv2_1 = nn.Conv2d(128, 64, 3, 1, 0)
 
-        self.recon_block1 = WaveUnpool(64, option_unpool)
+        self.recon_block1 = DeUnpool(64, option_unpool)
         if option_unpool == 'sum':
             self.conv1_2 = nn.Conv2d(64*multiply_in, 64, 3, 1, 0)
         else:
@@ -330,8 +330,8 @@ class WaveDecoder(nn.Module):
 # class WT(nn.Module):
 #     def __init__(self):
 #         super(WT, self).__init__()
-#         self.encoder = WaveEncoder(option_unpool='sum')
-#         self.decoder = WaveDecoder(option_unpool='sum')
+#         self.encoder = DeEncoder(option_unpool='sum')
+#         self.decoder = DeDecoder(option_unpool='sum')
 #         self.re = Reconstruct()
 #     def encode(self, x, skips, level):
 #         return self.encoder.encode(x, skips, level)
